@@ -1,10 +1,9 @@
 'use client';
 
-import SearchBar from '@/components/SearchBar';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import SearchBar from '@/components/SearchBar';
 
 type Book = {
   id: string;
@@ -24,14 +23,18 @@ function BookResults() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!q) return setBooks([]);
+    if (!q) {
+      setBooks([]);
+      return;
+    }
     setLoading(true);
     fetch(`/api/books?q=${encodeURIComponent(q)}`)
       .then((res) => res.json())
       .then((data) => {
         setBooks((data.items as Book[]) || []);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [q]);
 
   if (!q) return null;
@@ -85,9 +88,17 @@ export default function SearchPage() {
       <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight mb-4 text-gray-900">
         Descubrí, calificá y compartí libros
       </h1>
-      <SearchBar />
-      <p className="mt-2 text-xs text-violet-700">Ejemplos: <em>harry potter</em> · <em>inauthor:rowling</em> · <em>isbn:9780439708180</em></p>
-      <Suspense>
+
+      {/* ⬇️ Importante: Suspense alrededor de SearchBar */}
+      <Suspense fallback={null}>
+        <SearchBar />
+      </Suspense>
+
+      <p className="mt-2 text-xs text-violet-700">
+        Ejemplos: <em>harry potter</em> · <em>inauthor:rowling</em> · <em>isbn:9780439708180</em>
+      </p>
+
+      <Suspense fallback={<div className="mt-8 text-center text-gray-600 animate-pulse">Cargando…</div>}>
         <BookResults />
       </Suspense>
     </section>

@@ -1,11 +1,29 @@
 import Image from 'next/image';
+import type { Metadata } from 'next';
 import { getVolume, bestImage } from '@/lib/googleBooks';
 import ReviewForm from '@/components/ReviewForm';
 import ReviewList from '@/components/ReviewList';
 
-export default async function BookDetailPage(props: { params: { volumeId: string } }) {
-  const params = await props.params;
-  const volumeId = await params.volumeId;
+type Params = { volumeId: string };
+
+// (opcional pero recomendado para SEO)
+export async function generateMetadata(
+  { params }: { params: Promise<Params> }
+): Promise<Metadata> {
+  const { volumeId } = await params;
+  // Si querés, podrías hacer un fetch mínimo para armar el title con el nombre
+  // del libro. Para no duplicar requests, lo dejamos simple:
+  return {
+    title: `Libro ${volumeId} | Mi Librería`,
+    description: `Detalles y reseñas del libro ${volumeId}`,
+  };
+}
+
+export default async function Page(
+  { params }: { params: Promise<Params> }
+) {
+  const { volumeId } = await params;
+
   const book = await getVolume(volumeId);
   const v = book.volumeInfo;
   const img = bestImage(v);
@@ -16,7 +34,15 @@ export default async function BookDetailPage(props: { params: { volumeId: string
       <div className="grid gap-8 md:grid-cols-[200px,1fr]">
         <div className="space-y-3">
           <div className="relative h-[280px] w-[200px] overflow-hidden rounded-xl border border-violet-100 bg-[#ede6ff]">
-            {img ? <Image src={img} alt={v.title ?? ''} fill sizes="200px" className="object-cover" /> : null}
+            {img ? (
+              <Image
+                src={img}
+                alt={v.title ?? ''}
+                fill
+                sizes="200px"
+                className="object-cover"
+              />
+            ) : null}
           </div>
           <div className="text-xs text-gray-500">
             {isbn ? <>ISBN: <span className="font-mono">{isbn}</span></> : null}
@@ -33,7 +59,10 @@ export default async function BookDetailPage(props: { params: { volumeId: string
             {v.categories?.length ? (
               <div className="mt-2 flex flex-wrap gap-2">
                 {v.categories.map((c) => (
-                  <span key={c} className="rounded-full border border-violet-200 bg-[#f7f3ff] px-3 py-1 text-xs text-gray-700">
+                  <span
+                    key={c}
+                    className="rounded-full border border-violet-200 bg-[#f7f3ff] px-3 py-1 text-xs text-gray-700"
+                  >
                     {c}
                   </span>
                 ))}
@@ -54,8 +83,8 @@ export default async function BookDetailPage(props: { params: { volumeId: string
 
       {/* Reseñas locales */}
       <section className="space-y-4">
-  <ReviewForm volumeId={volumeId} />
-  <ReviewList volumeId={volumeId} />
+        <ReviewForm volumeId={volumeId} />
+        <ReviewList volumeId={volumeId} />
       </section>
 
       <div>
@@ -68,26 +97,4 @@ export default async function BookDetailPage(props: { params: { volumeId: string
       </div>
     </article>
   );
-
 }
-
-// next.config.js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'books.google.com',
-        pathname: '/books/content*',
-      },
-      {
-        protocol: 'https',
-        hostname: 'books.google.com',
-        pathname: '/books/content*',
-      },
-    ],
-  },
-};
-
-module.exports = nextConfig;

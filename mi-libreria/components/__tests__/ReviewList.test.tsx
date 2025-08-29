@@ -2,6 +2,7 @@
 // Los comentarios son míos para que se note que entendí cada parte y lo hice yo :)
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
+import React from 'react';
 
 // Mockeo la función getReviews para controlar los datos que devuelve el componente.
 // OJO: la ruta tiene que coincidir con la que usa el componente.

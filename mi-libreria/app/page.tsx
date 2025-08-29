@@ -1,6 +1,7 @@
-"use client"; 
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
 import SearchBar from '@/components/SearchBar';
-import { useEffect, useState } from 'react';
 
 // Frases rotativas inspiradoras
 const phrases = [
@@ -37,7 +38,10 @@ export default function HomePage() {
 
         <div className="w-full flex flex-col items-center">
           <div className="max-w-2xl w-full">
-            <SearchBar placeholder="Ej: harry potter, inauthor:rowling, isbn:9780439708180" />
+            {/* ⬇️ Importante: Suspense alrededor de SearchBar */}
+            <Suspense fallback={null}>
+              <SearchBar placeholder="Ej: harry potter, inauthor:rowling, isbn:9780439708180" />
+            </Suspense>
           </div>
         </div>
 
