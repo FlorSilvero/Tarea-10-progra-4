@@ -1,24 +1,24 @@
 // lib/review.locals.ts
 
-// Agrego zod y exporto reviewSchema para validación en API
 import { z } from 'zod';
 
+/** Zod schema para validar una reseña (createdAt siempre string ISO) */
 export const reviewSchema = z.object({
   id: z.string(),
   rating: z.number().int().min(1).max(5),
   content: z.string().trim().min(5),
   up: z.number().int().min(0),
   down: z.number().int().min(0),
-  createdAt: z.union([z.string(), z.number()]),
+  createdAt: z.string(), // ← unificado a string
 });
 
 export type Review = {
   id: string;
-  rating: number;       // 1..5, entero
-  content: string;      // >=5 chars (trim)
-  up: number;           // >=0
-  down: number;         // >=0
-  createdAt: string;    // ISO string
+  rating: number;    // 1..5, entero
+  content: string;   // >=5 chars (trim)
+  up: number;        // >=0
+  down: number;      // >=0
+  createdAt: string; // ISO string
 };
 
 const KEY = (volumeId: string) => `reviews:${volumeId}`;
@@ -71,11 +71,11 @@ function save(volumeId: string, rows: Review[]): void {
 }
 
 function uuid(): string {
-  const g: any = globalThis as any;
-  if (g.crypto && typeof g.crypto.randomUUID === 'function') {
-    return g.crypto.randomUUID();
+  // Usa crypto.randomUUID si está disponible (browser moderno / node 19+)
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return (crypto as Crypto).randomUUID();
   }
-  // fallback simple
+  // Fallback simple
   return 'id-' + Math.random().toString(36).slice(2);
 }
 
@@ -104,13 +104,14 @@ export function createReview(
   const content = input.content?.toString() ?? '';
 
   assertValidInput(rating, content);
+
   const normalized: Review = {
     id: uuid(),
     rating,
     content: content.trim(),
     up: 0,
     down: 0,
-    createdAt: new Date(Date.now()).toISOString(),
+    createdAt: new Date().toISOString(),
   };
 
   const rows = load(volumeId);
